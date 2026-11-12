@@ -1,5 +1,6 @@
 /*======================================================================
  Core CSS for LaTeXML documents converted to (X)HTML */
+
 /* Generic Page layout */
 .ltx_page_header,
 .ltx_page_footer { font-size:0.8em; }
@@ -66,18 +67,25 @@ a.ltx_LaTeXML_logo { text-decoration: none; }
 .ltx_tocentry  { list-style-type:none; }
 
 /* support for common author block layouts.*/
-/* add class ltx_authors_1line to get authors in single line
+/* Default (or w/ class ltx_authors_1line) to get authors in single line
    with pop-up affiliation, etc. */
-.ltx_authors_1line .ltx_creator,
-.ltx_authors_1line .ltx_author_before,
-.ltx_authors_1line .ltx_author_after { display:inline;}
-.ltx_authors_1line .ltx_author_notes { display:inline-block; }
-.ltx_authors_1line .ltx_author_notes:before { content:"*"; color:blue;}
-.ltx_authors_1line .ltx_author_notes span { display:none; }
-.ltx_authors_1line .ltx_author_notes:hover span {
-    display:block; position:absolute; z-index:10;
+.ltx_creator,
+.ltx_author_before,
+.ltx_author_after { display:inline;}
+.ltx_author_notes { display:inline-block; }
+.ltx_author_notes:before {
+    content:"*"; color:blue;
+    font-size:80%; vertical-align:super; }
+.ltx_author_notes .ltx_author_notes_content {
+    visibility:hidden; opacity:0; transition: opacity 0.3s;
+    position:absolute; z-index:10; }
+.ltx_author_notes:hover .ltx_author_notes_content {
+    visibility:visible; opacity:1;
     background:white; text-align:left;
-    border: 1px solid black; border-radius: 0 5px 5px 5px; box-shadow: 5px 5px 10px gray; }
+    border: 1px solid black; border-radius: 0 5px 5px 5px; box-shadow: 5px 5px 10px gray;
+    padding:0.3rem; font-size:1rem; }
+.ltx_author_notes:hover .ltx_author_notes_content .ltx_contact {
+    display:block; }
 
 /* add class=ltx_authors_multiline to get authors & affliations on separate lines*/
 .ltx_authors_multiline .ltx_creator,
@@ -86,7 +94,34 @@ a.ltx_LaTeXML_logo { text-decoration: none; }
 .ltx_authors_multiline .ltx_author_notes,
 .ltx_authors_multiline .ltx_author_notes .ltx_contact {
     display:block; }
+.ltx_authors_multiline .ltx_author_notes:before {
+    content:""; }
+.ltx_authors_multiline .ltx_author_notes .ltx_author_notes_content {
+    visibility:visible; opacity:1; position:static; z-index:0; }
+.ltx_authors_multiline .ltx_author_notes:hover .ltx_author_notes_content {
+    position:static; padding:0;
+    border:none; border-radius:0; box-shadow:none; text-align:center; }
+.ltx_authors_multiline .ltx_contact_name {
+    display:none; }
 
+.ltx_pubnotes:before {
+    content:"\002020"; color:blue;
+    font-size:80%; vertical-align:super; }
+.ltx_pubnotes        { display:inline-block; }
+.ltx_pubnotes .ltx_pubnotes_content {
+    visibility:hidden; opacity:0; transition: opacity 0.3s;
+    position:absolute; z-index:10; }
+.ltx_pubnotes:hover .ltx_pubnotes_content {
+    visibility:visible; opacity:1;
+    background:white; text-align:left;
+    border: 1px solid black; border-radius: 0 5px 5px 5px; box-shadow: 5px 5px 10px gray;
+    padding:0.3rem; font-size:1rem; }
+.ltx_pubnotes:hover .ltx_pubnotes_content .ltx_pubnote{
+    display:block; }
+
+.ltx_note_name,
+.ltx_contact_name {
+    font-style:italic; }
 /*======================================================================
   Para level */
 .ltx_float {
@@ -132,6 +167,12 @@ a.ltx_LaTeXML_logo { text-decoration: none; }
 .ltx_flex_size_many .ltx_graphics {
   max-width: calc(0.24*60rem);
 }
+/* brucemiller/LaTeXML#2392: the flex_size caps above change an image's width but
+   not its height, distorting the aspect ratio (a square figure becomes a vertical
+   ellipsoid). Each ltx:graphics now carries an explicit `aspect-ratio` (emitted in
+   post-processing from the requested width/height); freeing the height lets that
+   ratio govern, so the capped width scales the height with it. */
+.ltx_flex_figure .ltx_graphics { height: auto; }
 
 /* flex row breaks */
 .ltx_flex_figure .ltx_flex_break {
@@ -181,20 +222,26 @@ a.ltx_LaTeXML_logo { text-decoration: none; }
 .ltx_align_floatleft  { float:left; }
 .ltx_align_floatright { float:right; }
 
-.ltx_td.ltx_align_left,   .ltx_th.ltx_align_left,
-.ltx_td.ltx_align_right,  .ltx_th.ltx_align_right,
-.ltx_td.ltx_align_center, .ltx_th.ltx_align_center { white-space:nowrap; }
-.ltx_td.ltx_align_left.ltx_wrap,   .ltx_th.ltx_align_left.ltx_wrap,
-.ltx_td.ltx_align_right.ltx_wrap,  .ltx_th.ltx_align_right.ltx_wrap,
-.ltx_td.ltx_align_center.ltx_wrap, .ltx_th.ltx_align_center.ltx_wrap,
+.ltx_td.ltx_align_left,   .ltx_th.ltx_align_left,   .ltx_eqn_cell.ltx_align_left,
+.ltx_td.ltx_align_right,  .ltx_th.ltx_align_right,  .ltx_eqn_cell.ltx_align_right,
+.ltx_td.ltx_align_center, .ltx_th.ltx_align_center, .ltx_eqn_cell.ltx_align_center { white-space:nowrap; }
+/* #527: a display equation `\[…\]` (and fleqn/constraint variants) puts its
+   content in an `ltx_eqn_cell` with an alignment class but NO `ltx_td`, so it
+   was missing the nowrap above. Between the two 50%-width centering pad cells of
+   the width:100% `ltx_eqn_table`, a `\text{…}`-only display (`ltx_markedasmath`,
+   which unlike real math is wrappable) then collapsed to one word per line.
+   Give the equation cell the same nowrap-with-`ltx_wrap`-optout as a table cell. */
+.ltx_td.ltx_align_left.ltx_wrap,   .ltx_th.ltx_align_left.ltx_wrap,   .ltx_eqn_cell.ltx_align_left.ltx_wrap,
+.ltx_td.ltx_align_right.ltx_wrap,  .ltx_th.ltx_align_right.ltx_wrap,  .ltx_eqn_cell.ltx_align_right.ltx_wrap,
+.ltx_td.ltx_align_center.ltx_wrap, .ltx_th.ltx_align_center.ltx_wrap, .ltx_eqn_cell.ltx_align_center.ltx_wrap,
 .ltx_td.ltx_align_justify,  .ltx_th.ltx_align_justify { white-space:normal; }
 
 .ltx_tabular .ltx_tabular { width:100%; }
 .ltx_inline-block,
-.ltx_inline-logical-block { display:inline-block; }
+.ltx_inline-logical-block { display:inline-block; text-indent:0px; }
 
 /* tabbing is always a standalone paragraph-level construct */
-.ltx_tabular.ltx_tabbing { 
+.ltx_tabular.ltx_tabbing {
   display: table; }
 
 /* avoid padding when aligning adjacent columns, e.g. for split decimals */
@@ -216,6 +263,18 @@ table.ltx_eqn_align tr.ltx_equation td.ltx_align_left + td.ltx_align_center,
 table.ltx_eqn_align tr.ltx_equation td.ltx_align_center + td.ltx_align_right,
 table.ltx_eqn_align tr.ltx_equation td.ltx_align_center + td.ltx_align_center  { padding-left:3em; }
 table.ltx_eqn_eqnarray tr.ltx_eqn_lefteqn + tr td.ltx_align_right { min-width:2em; }
+
+/* Native-MathML alignment cells. An `aligned`/`align`/`gather`/`split` that is
+   NESTED in another math environment renders as ONE `<math>` with an `<mtable>`
+   (not the HTML `ltx_eqn_table` above), for which LaTeXML sets
+   `columnspacing="0pt"` — the relation operator supplies the inter-column gap.
+   Browsers still add a default 0.4em horizontal padding to every `<mtd>`, which
+   double-spaces the relation, e.g. `y(x) = …` came out with ~3x the intended
+   space (issue #755, reporter nasser1). Reset it. Keyed on the tight
+   `columnspacing="0pt"` table so matrices/arrays (bare `<mtd>`, non-zero
+   `columnspacing` — which some browsers under-honor, leaning on this padding for
+   column separation) are left untouched. */
+math mtable[columnspacing="0pt"] mtd { padding-left:0; padding-right:0; }
 
 .ltx_eqn_eqno { max-width:0em; overflow:visible; white-space: nowrap; }
 .ltx_eqn_eqno.ltx_align_right .ltx_tag { float:right; }
@@ -282,8 +341,20 @@ dl.ltx_description dl.ltx_description dd { margin-left:3em; }
     margin: 1ex 3em 1ex 0em;
     overflow-x:auto;
     text-align: left; }
+/* An auto-height listing never overflows vertically, but the CSS Overflow spec
+   promotes overflow-y:visible -> auto whenever overflow-x scrolls, which paints a
+   phantom vertical scrollbar (algorithm2e listings, witness 2002.09766). Pin it
+   hidden. lstlisting is exempt (its framed box may scroll on purpose). Mirrors the
+   ar5iv.css fix. */
+.ltx_listing:not(.ltx_lstlisting) { overflow-y:hidden; }
 .ltx_float .ltx_listing {
     margin: 0; }
+/* A full-line leader-fill separator (\hbox to \hsize{\dashfill\hfil}) is a width:100%
+   inline-block wrapping an .ltx_leader; the engine marks it .ltx_leaderfill. Two of them
+   flank a centered label on ONE nowrap listingline; as inline-blocks they lay side-by-side
+   and sum to >200% width, overflowing the listing (witness 1510.02728). Make each own its
+   line so they stack like the pdflatex golden. OXIDIZED_DESIGN #152. */
+.ltx_inline-block.ltx_leaderfill { display:block; }
 .ltx_listingline { white-space:nowrap; min-height:1em; }
 .ltx_lst_space { white-space: pre; }
 .ltx_lst_numbers_left .ltx_listingline .ltx_tag {
@@ -301,7 +372,7 @@ dl.ltx_description dl.ltx_description dd { margin-left:3em; }
     max-width:0em; text-align:right; }
 */
 .ltx_parbox {
-    text-indent:0em;
+    text-indent:0em !important;
     display: inline-block; }
 
 /* NOTE that it is CRITICAL to put position:relative outside & absolute inside!!
@@ -314,6 +385,10 @@ dl.ltx_description dl.ltx_description dd { margin-left:3em; }
 .ltx_transformed_inner {
     display:block;
     position:absolute;bottom:0pt;left:0pt; }
+.ltx_inline-block > .ltx_para > .ltx_p:first-child,
+.ltx_logical-block > .ltx_para > .ltx_p:first-child,
+.ltx_inline-logical-block > .ltx_para > .ltx_p:first-child {
+    text-indent:0em; }
 .ltx_transformed_inner > .ltx_p {text-indent:0em; margin:0; padding:0; }
 
 /* If simulating a table (html5), try to get rowspan to work...sorta? */
@@ -392,7 +467,6 @@ span.ltx_rowspan { position:absolute; top:0; bottom:0; }
 .ltx_border_B  { border-bottom:1px solid gray; }
 .ltx_border_L  { border-left:1px solid gray; }
 /* Framing */
-.ltx_framed    { padding:3pt; }
 span.ltx_framed       { display:inline-block; text-indent:0; } /* avoid padding/margin collapse */
 .ltx_framed_rectangle { border-style:solid; border-width:1px; }
 .ltx_framed_top       { border-top-style:solid; border-top-width:1px; }
@@ -407,10 +481,13 @@ span.ltx_framed       { display:inline-block; text-indent:0; } /* avoid padding/
 
 .ltx_rule { vertical-align: bottom; height: 0.4pt; width: 0.4pt; }
 
+.ltx_underline { text-decoration: underline; }
+.ltx_overline  { text-decoration: overline; }
+
 /*======================================================================
  Misc */
 /* .ltx_verbatim*/
-.ltx_verbatim { text-align:left; }
+.ltx_verbatim { text-align:left; white-space:nowrap; }
 /*======================================================================
  Meta stuff, footnotes */
 .ltx_note_content { display:none; }
@@ -436,12 +513,98 @@ span.ltx_framed       { display:inline-block; text-indent:0; } /* avoid padding/
 .ltx_nounicode    { color:red; }
 .ltx_nodisplay    { display:none; }
 /*======================================================================
- SVG (pgf/tikz ?) basics */
-
+ SVG (pgf/tikz & xy) basics
+ */
+/* Heuristically adjust for content uncentered within line-box */
+foreignObject {
+    translate: 0 0.1em;
+    --ltx-fo-width: 100%; }
+/* Use flex to vertically center foreignObject,
+   to accommodate potentially tall line-box */
+.ltx_foreignobject_container {
+    display:flex;
+    align-items:center;
+    height:100%;
+    width:var(--ltx-fo-width);
+}
+/* Also horizontally for single math, since Chrome adds a lot of left/right spacing. */
+.ltx_foreignobject_container:has( > .ltx_foreignobject_content > math:only-child) {
+    justify-content:center;
+}
+/* If multiple children, give more space to avoid unexpected line breaks
+   due to font differences. */
+.ltx_foreignobject_container:has( > .ltx_foreignobject_content > :not(:only-child)) {
+    width:calc(1.1 * var(--ltx-fo-width));
+}
+/* latexml-oxide local delta (not in vanilla LaTeXML.css): a minipage in the
+   content = a measured box's upper part (tcolorbox et al. wrap box content in
+   \minipage; picture labels never do). TeX fills such boxes from the top, so any
+   estimator slack must fall BELOW the text; centering splits it into a fake empty
+   band above (arXiv 2605.02240). */
+.ltx_foreignobject_container:has( > .ltx_foreignobject_content > .ltx_minipage) {
+    align-items:start;
+}
+/* latexml-oxide local delta (not in vanilla LaTeXML.css; issue #473): TeX puts
+   \abovedisplayskip/\belowdisplayskip glue (~1em of the body font) around
+   displayed math, but vanilla's display containers carry no margin, so two
+   adjacent displays render touching. 1em collapses with the UA's 1em <p>
+   margins through the ltx_para wrappers, keeping text<->display and
+   display<->display gaps uniform (no doubling next to text). */
+.ltx_eqn_table, .ltx_eqn_div { margin-top:1em; margin-bottom:1em; }
+/* latexml-oxide local delta (not in vanilla LaTeXML.css; issue #533): display
+   math is a `.ltx_eqn_table { display:table; width:100% }` whose center-pad
+   cells stretch it to full width. Inside a width-constrained box — a `p{}` cell
+   / \parbox / minipage (.ltx_inline-block) or a table cell (.ltx_td) — the
+   table's intrinsic width exceeds the box, and since `overflow` is ignored on
+   `display:table`, the equation ESCAPES the cell and scatters across the page
+   (lualatex keeps it in the cell). Re-box it as a block scroll container so it
+   stays within the cell and scrolls horizontally when too wide — the same
+   containment `.ltx_listing` already uses for code. Normal full-width display
+   math keeps `display:table` (untouched); this rule fires only under a
+   constrained ancestor. Witness: the issue #533 longtable `p{}` cell with an
+   enumerate whose items hold `\[\begin{aligned}…\end{aligned}\]`. */
+.ltx_inline-block .ltx_eqn_table,
+.ltx_td .ltx_eqn_table { display:block; overflow-x:auto; max-width:100%; }
+/* latexml-oxide local delta (not in vanilla LaTeXML.css; issue #431): vanilla's
+   `.ltx_verbatim { white-space:nowrap }` (kept above) overrides the UA `pre`
+   rule, so a plain {verbatim} <pre> collapses to ONE line, and fancyvrb's
+   per-line spans lose their leading indentation and runs of spaces. `pre`
+   keeps nowrap's no-wrapping and preserves them all. */
+.ltx_verbatim { white-space:pre; }
+/* fancyvrb typesets each source line as a width-limited box — a span with
+   ltx_text + ltx_verbatim + ltx_inline-block (\FancyVerbFormatLine binding
+   hack) — and inline-blocks flow side-by-side in a wide window. One source
+   line per row; blank source lines keep a line's height; the enclosing
+   paragraph's text-indent must not shift lines. Only fancyvrb lines carry
+   ltx_verbatim on an inline-block text span — inline \verb is a <code>
+   without ltx_inline-block, so it is untouched. */
+.ltx_text.ltx_verbatim.ltx_inline-block { display:block; text-indent:0; min-height:1lh; }
+/* latexml-oxide local delta (not in vanilla LaTeXML.css; issue #525): a
+   fancyvrb `frame=single` box (emitted by fancyvrb_sty.rs as an
+   ltx_framed_rectangle carrying this class) spans the print \linewidth
+   (~460px). Being a shrink-to-fit inline-block of non-wrapping verbatim lines,
+   on a phone viewport it would push its right border off-screen and scroll the
+   whole page. Cap it at the viewport and scroll over-long lines WITHIN the box
+   (the containment .ltx_listing uses for code, OXIDIZED_DESIGN #110); border-box
+   keeps the border+padding inside the cap. Desktop/tablet render at \linewidth
+   unchanged. */
+.ltx_framed_verbatim { max-width:100%; overflow-x:auto; box-sizing:border-box; }
+/* latexml-oxide local delta (not in vanilla LaTeXML.css; issue #702): fvextra
+   `breaklines=true` on a framed verbatim carries this marker class (emitted by
+   fancyvrb_sty.rs off `\ifFV@breaklines`), the stable hook for styling a wrapping
+   verbatim apart from a non-wrapping one. fvextra wraps via a fixed print-width
+   `\parbox` (~\linewidth), which on a narrow viewport would overflow and scroll
+   horizontally — defeating the point of breaklines. Cap that inner parbox at the
+   box width so the text reflows to fit; desktop (wide box) is unchanged. Scoped
+   to `.ltx_break`, so the non-wrapping frame box keeps its scroll-over behaviour. */
+.ltx_framed_verbatim.ltx_break .ltx_parbox { max-width:100%; }
+/* line height 0 just for this layer, to keep the line-box compact */
+.ltx_foreignobject_content {
+    display:block;
+}
 /* Stuff appearing in svg:foreignObject */
 .ltx_svg_fog foreignObject  { margin:0; padding:0; overflow:visible; }
 .ltx_svg_fog foreignObject > p { margin:0; padding:0; display:block; }
-/*.ltx_svg_fog foreignObject > p { margin:0; padding:0; display:block; white-space:nowrap; }*/
 
 /*======================================================================
  Low-level Basics */
@@ -503,7 +666,102 @@ cite                 { font-style: normal; }
 .ltx_minipage {
   align-self: normal;
   display: inline-block;
+  text-align: justify;
 }
 .ltx_minipage > .ltx_graphics {
   max-width:100%;
+  height:auto; /* #2392: preserve the emitted aspect-ratio when the width is capped */
+}
+/* arXiv/html_feedback#6895: \scalerel*{obj}{ref} scales obj to ref's (text) height.
+   The scalerel binding wraps obj in .ltx_scalerel; size the box to the line height
+   and let its child (an SVG/picture/rule) fill it, so a picture-based inline icon
+   (e.g. \orcidicon) renders as a text-height glyph instead of its unscaled size. */
+.ltx_scalerel { display:inline-block; height:1em; vertical-align:-0.1em; }
+.ltx_scalerel .ltx_inline-block { height:100%; }
+.ltx_scalerel svg, .ltx_scalerel img { height:100%; width:auto; }
+
+/* The ORCID iD logo (a `\lx@orcidlogo` SVG, shared by \lx@add@orcid and
+   \orcidlink) renders as a text-height inline glyph. It used to be an oversized
+   1.7em badge that overflowed the line (html_feedback #6895, #6016, #5789, #2176,
+   #5615). #6571 &c. */
+.ltx_orcidlogo { height:1em; width:1em; vertical-align:-0.15em; }
+/* Author name + ORCID iD badge on one line ("Name  iD"): the badge is a sibling of
+   the name inside this thin inline wrapper (not in the author-notes group). The
+   name shrinks to its text so the badge sits right after it. */
+.ltx_annotated_personname {
+  display:inline-flex; flex-wrap:wrap; align-items:baseline;
+  justify-content:center; column-gap:0.35em; }
+.ltx_annotated_personname > .ltx_personname { min-width:0; }
+
+.ltx_overlay {position:relative; }
+.ltx_overlay > span:nth-child(2) {position:absolute; left:0; }
+
+/* Apply light/dark color mode themes */
+@media (prefers-color-scheme: light) {
+  [style*="--ltx-fg-color:"] {
+    color: var(--ltx-fg-color);
+  }
+  [style*="--ltx-bg-color:"] {
+    background-color: var(--ltx-bg-color);
+  }
+  [style*="--ltx-border-color:"] {
+    border-color: var(--ltx-border-color);
+  }
+  [style*="--ltx-fill-color:"] {
+    fill: var(--ltx-fill-color);
+  }
+  [style*="--ltx-stroke-color:"] {
+    stroke: var(--ltx-stroke-color);
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    background-color: black;
+    color: white;
+  }
+  /* The :root rule does not appear to propagate color: into SVG foreignObject */
+  .ltx_foreignobject_content {
+    color: var(--fn-fg-color-to-dark-mode, white);
+  }
+  /* We eventually want to cover the full range of possible attributes where color
+      customization is expected in latexml's HTML format. This will be easier once
+      CSS @function becomes widely available in browsers.
+
+    Emulate a "function" via a custom property, declared on each node of interest.
+    Note that we may have multiple color properties set at the same time, for example
+    both foreground and background color, which could lead to a var naming collision.
+    So we are carefully using different variable names. */ 
+  [style*="color:"] {
+    --fn-fg-color-to-dark-mode:
+      hsl(from var(--ltx-fg-color)
+        h s calc(100 - l));
+    --fn-bg-color-to-dark-mode:
+      hsl(from var(--ltx-bg-color)
+        h s calc(100 - l));
+    --fn-border-color-to-dark-mode:
+      hsl(from var(--ltx-border-color)
+        h s calc(100 - l));
+    --fn-fill-color-to-dark-mode:
+      hsl(from var(--ltx-fill-color)
+        h s calc(100 - l));
+    --fn-stroke-color-to-dark-mode:
+      hsl(from var(--ltx-stroke-color)
+        h s calc(100 - l));
+  }
+  /* Apply the function to the correct color property in context: */
+  [style*="--ltx-fg-color:"] {
+    color: var(--fn-fg-color-to-dark-mode); 
+  }
+  [style*="--ltx-bg-color:"] {
+    background-color: var(--fn-bg-color-to-dark-mode);
+  }
+  [style*="--ltx-border-color:"] {
+    border-color: var(--fn-border-color-to-dark-mode);
+  }
+  [style*="--ltx-fill-color:"] {
+    fill: var(--fn-fill-color-to-dark-mode);
+  }
+  [style*="--ltx-stroke-color:"] {
+    stroke: var(--fn-stroke-color-to-dark-mode);
+  }
 }

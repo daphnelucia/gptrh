@@ -11,7 +11,7 @@ import sys
 # 4. fix "refer to caption" localization!!!
 
 # MUST ADD FOR NEW LANGS
-lang_flags = {'en': '🇺🇸 English', 'de': '🇩🇪 Deutsch', 'fr': '🇫🇷 Français'}
+lang_flags = {'en': '🇺🇸 English', 'de': '🇩🇪 Deutsch', 'fr': '🇫🇷 Français', 'es': 'Español'}
 
 #
 # begin parsing file
@@ -63,6 +63,7 @@ with open(cabinet_file, encoding='utf-8') as csvfile:
 
 # Parse the file into soup
 with open(html_file, 'r', encoding='utf-8') as fin:
+    print(fin)
     soup = BeautifulSoup(fin, 'html.parser')
 
 #
